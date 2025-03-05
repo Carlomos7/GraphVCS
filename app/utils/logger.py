@@ -97,3 +97,31 @@ def setup_logger(
         logger.addHandler(file_handler)
 
     return logger
+
+
+def get_repository_logger(repo_path: Union[str, Path]) -> logging.Logger:
+    """
+    Get logger configured for a specific repository.
+
+    Args:
+        repo_path: Path to the repository
+
+    Returns:
+        Configured logger for the repository
+
+    Example:
+        >>> repo_logger = get_repository_logger("/path/to/repo")
+        >>> repo_logger.info("Repository operation completed")
+    """
+    repo_path = Path(repo_path)
+    repo_name = repo_path.name  # Use repository folder name in logger name
+
+    # Store logs in .gvcs/logs inside the repository
+    log_file = settings.get_repo_path(repo_path) / "logs" / f"{settings.APP_NAME}.log"
+
+    # Create a logger with the repository name as part of the logger name
+    # This creates a hierarchy of loggers (app.repo_name)
+    return setup_logger(
+        name=f"{settings.APP_NAME}.{repo_name}",
+        log_file=log_file,
+    )
