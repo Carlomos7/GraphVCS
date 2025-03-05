@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional, Union
 
-from ..config.settings import settings
+from app.config.settings import settings
 
 
 class ColoredFormatter(logging.Formatter):
@@ -75,6 +75,8 @@ def setup_logger(
     logger = logging.getLogger(name)
     logger.setLevel(min(console_level, file_level))
 
+    logger.propagate = False  # Prevent log messages from propagating to root logger
+
     if logger.hasHandlers():
         logger.handlers.clear()
 
@@ -125,3 +127,22 @@ def get_repository_logger(repo_path: Union[str, Path]) -> logging.Logger:
         name=f"{settings.APP_NAME}.{repo_name}",
         log_file=log_file,
     )
+
+
+logger = setup_logger()
+
+root_logger = logging.getLogger()
+if not root_logger.handlers:
+    root_handler = logging.StreamHandler()
+    root_handler.setFormatter(logging.Formatter(settings.LOG_FORMAT))
+    root_logger.addHandler(root_handler)
+    root_logger.setLevel(logging.WARNING)
+
+
+"""if __name__ == "__main__":
+    logger.debug("This is a debug message")
+    logger.info("This is an info message")
+    logger.warning("This is a warning message")
+    logger.error("This is an error message")
+    logger.critical("This is a critical message")
+"""
