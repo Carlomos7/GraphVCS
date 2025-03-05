@@ -39,3 +39,61 @@ class ColoredFormatter(logging.Formatter):
         """
         color = self.COLORS.get(record.levelno)
         return f"{color}{super().format(record)}{self.RESET}"
+
+
+def setup_logger(
+    name: str = settings.APP_NAME,
+    log_file: Optional[Union[str, Path]] = None,
+    console_level: Optional[int] = None,
+    file_level: int = logging.DEBUG,
+    log_format: str = settings.LOG_FORMAT,
+    max_file_size: int = 5 * 1024 * 1024,  # 5 MB
+    backup_count: int = 5,
+) -> logging.Logger:
+    """Set up a logger with the given settings
+
+    Args:
+        name: Logger name (default is APP_NAME from settings)
+        log_file: Optional path to log file (if None, no file logging)
+        console_level: Level for console output (default from settings)
+        file_level: Level for file output (default DEBUG)
+        log_format: Format string for log messages
+        max_file_size: Maximum log file size before rotation (bytes)
+        backup_count: Number of backup log files to keep
+
+    Returns:
+        Configured logger instance
+
+    Example:
+        >>> logger = setup_logger("mylogger", log_file="app.log")
+        >>> logger.info("Application started")
+    """
+
+    if console_level is None:
+        console_level = getattr(logging, settings.LOG_LEVEL)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(min(console_level, file_level))
+
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    console_formatter = ColoredFormatter(log_format)
+    file_formatter = logging.Formatter(log_format)
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(console_formatter)
+    console_handler.setLevel(console_level)
+    logger.addHandler(console_handler)
+
+    if log_file:
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        file_handler = RotatingFileHandler(
+            log_path, maxBytes=max_file_size, backupCount=backup_count
+        )
+        file_handler.setFormatter(file_formatter)
+        file_handler.setLevel(file_level)
+        logger.addHandler(file_handler)
+
+    return logger
