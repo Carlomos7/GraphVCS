@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from typing import Type, Optional, Union
-from functools import lru_cache
+from typing import Type, Optional, Union, Dict
+#from functools import lru_cache
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -86,9 +86,9 @@ class ProdSettings(Settings):
     LOG_LEVEL: str = "INFO"
 
 
-@lru_cache()
+"""@lru_cache()
 def get_settings() -> Type[BaseSettings]:
-    """Get the settings class based on the environment."""
+    #Get the settings class based on the environment.
     env = os.getenv("ENVIRONMENT", "DEVELOPMENT")
     if env == "DEVELOPMENT":
         return DevSettings
@@ -96,4 +96,17 @@ def get_settings() -> Type[BaseSettings]:
         return TestSettings
     if env == "PRODUCTION":
         return ProdSettings
-    raise ValueError("Invalid environment setting.")
+    raise ValueError("Invalid environment setting.")"""
+
+environments: Dict[str, Type[BaseSettings]] = {
+    "DEVELOPMENT": DevSettings,
+    "TEST": TestSettings,
+    "PRODUCTION": ProdSettings,
+}
+
+def get_settings() -> Type[BaseSettings]:
+    #Get the settings class based on the environment.
+    env = os.getenv("ENVIRONMENT", "DEVELOPMENT")
+    return environments[env]
+
+settings = get_settings()
