@@ -44,7 +44,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         env_prefix="GRAPHVCS_",
-        case_insensitive_environments=True,
+        #case_sensitive=True,
     )
 
     def get_repo_path(self, base_path: Optional[Union[str, Path]] = None) -> Path:
@@ -98,15 +98,17 @@ def get_settings() -> Type[BaseSettings]:
         return ProdSettings
     raise ValueError("Invalid environment setting.")"""
 
-environments: Dict[str, Type[BaseSettings]] = {
+environments: Dict[str, Type[Settings]] = {
     "DEVELOPMENT": DevSettings,
     "TEST": TestSettings,
     "PRODUCTION": ProdSettings,
 }
 
-def get_settings() -> Type[BaseSettings]:
-    #Get the settings class based on the environment.
+
+def get_settings() -> Settings:
+    """Get the settings instance based on the environment."""
     env = os.getenv("ENVIRONMENT", "DEVELOPMENT")
-    return environments[env]
+    return environments.get(env, DevSettings)()
+
 
 settings = get_settings()
